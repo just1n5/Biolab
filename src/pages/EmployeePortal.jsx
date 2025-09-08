@@ -1,8 +1,8 @@
 // src/pages/EmployeePortal.jsx - Portal principal de empleados
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, Lock, LogOut, Menu, X, Users, FileText, Upload, 
+import {
+  User, Lock, LogOut, Menu, X, Users, FileText, Upload,
   Search, Calendar, Activity, AlertCircle, CheckCircle,
   Clock, Loader2, Plus, Eye, Trash2, Download
 } from 'lucide-react';
@@ -12,7 +12,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const EmployeeLogin = ({ onLoginSuccess }) => {
   const [credentials, setCredentials] = useState({
-    username: '',
+    email: '', // CAMBIO CLAVE: Se usa 'email' en lugar de 'username'
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -33,12 +33,14 @@ const EmployeeLogin = ({ onLoginSuccess }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
+        // Usamos data.message que viene del backend ahora
+        throw new Error(data.message || 'Error al iniciar sesión');
       }
 
-      localStorage.setItem('employeeToken', data.token);
-      localStorage.setItem('employeeData', JSON.stringify(data.user));
-      onLoginSuccess(data.user, data.token);
+      // Guardamos el token y los datos del usuario que vienen de la API
+      localStorage.setItem('employeeToken', data.data.token);
+      localStorage.setItem('employeeData', JSON.stringify(data.data.user));
+      onLoginSuccess(data.data.user, data.data.token);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -70,12 +72,12 @@ const EmployeeLogin = ({ onLoginSuccess }) => {
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <User size={16} />
-                Usuario
+                Correo Electrónico
               </label>
               <input
-                type="text"
-                value={credentials.username}
-                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                type="email"
+                value={credentials.email}
+                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-biolab-turquoise focus:border-transparent"
                 required
               />
@@ -158,7 +160,7 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('${API_BASE}/api/patients/register', {
+      const response = await fetch(`${API_BASE}/api/patients/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +180,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
         visit: data.visit
       });
 
-      // Limpiar formulario
       setPatientData({
         documentType: 'CC',
         documentNumber: '',
@@ -202,7 +203,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -221,9 +221,7 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
@@ -254,7 +252,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="mb-8">
           <button
             onClick={() => setShowRegisterForm(!showRegisterForm)}
@@ -265,7 +262,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
           </button>
         </div>
 
-        {/* Success Message */}
         {successMessage && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -303,7 +299,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
           </motion.div>
         )}
 
-        {/* Registration Form */}
         <AnimatePresence>
           {showRegisterForm && (
             <motion.div
@@ -324,7 +319,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Datos Personales */}
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-3">Datos Personales</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -454,7 +448,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
                   </div>
                 </div>
 
-                {/* Exámenes */}
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-3">
                     Exámenes a Realizar
@@ -477,7 +470,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
                   </div>
                 </div>
 
-                {/* Notas */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Notas adicionales
@@ -491,7 +483,6 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
                   />
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-3 justify-end">
                   <button
                     type="button"
@@ -589,7 +580,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
       });
 
       if (response.ok) {
-        // Recargar detalles de la visita
         handleViewDetails(selectedVisit.id);
         setUploadFile(null);
       }
@@ -620,7 +610,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -639,9 +628,7 @@ const MedicDashboard = ({ user, token, onLogout }) => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Search size={20} />
@@ -683,7 +670,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
           </button>
         </div>
 
-        {/* Results Table */}
         {searchResults.length > 0 && (
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <table className="w-full">
@@ -736,7 +722,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
           </div>
         )}
 
-        {/* Patient Details Modal */}
         {selectedVisit && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -751,7 +736,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
                   </button>
                 </div>
 
-                {/* Patient Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <p className="text-sm text-gray-600">Nombre</p>
@@ -773,7 +757,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
                   </div>
                 </div>
 
-                {/* Results Section */}
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-3">Resultados</h3>
                   
@@ -800,7 +783,6 @@ const MedicDashboard = ({ user, token, onLogout }) => {
                     <p className="text-gray-500 mb-4">No hay resultados subidos</p>
                   )}
 
-                  {/* Upload Section */}
                   <div className="border-t pt-4">
                     <h4 className="font-medium mb-2">Subir nuevo resultado</h4>
                     <div className="flex gap-2">
@@ -835,7 +817,6 @@ const EmployeePortal = () => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Verificar si hay sesión guardada
     const savedToken = localStorage.getItem('employeeToken');
     const savedUser = localStorage.getItem('employeeData');
     
@@ -857,13 +838,12 @@ const EmployeePortal = () => {
     setToken(null);
   };
 
-  // Si no hay usuario logueado, mostrar login
   if (!user || !token) {
     return <EmployeeLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Mostrar dashboard según el rol
-  if (user.role === 'Auxiliar') {
+  // Ahora se usa user.role en lugar de user.Role
+  if (user.role === 'Recepcion' || user.role === 'Auxiliar') {
     return <AuxiliaryDashboard user={user} token={token} onLogout={handleLogout} />;
   }
 
@@ -871,7 +851,6 @@ const EmployeePortal = () => {
     return <MedicDashboard user={user} token={token} onLogout={handleLogout} />;
   }
 
-  // Fallback para otros roles
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -888,4 +867,3 @@ const EmployeePortal = () => {
 };
 
 export default EmployeePortal;
-

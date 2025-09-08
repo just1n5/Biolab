@@ -49,25 +49,28 @@ app.use(helmet({
 }));
 
 // CORS configuration
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: Function) {
-    const allowedOrigins = process.env.FRONTEND_URL?.split(',') || ['http://localhost:5173'];
-    
-    // Permitir requests sin origin (ej: Postman, aplicaciones móviles)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
+//const corsOptions = {
+//  origin: function (origin: string | undefined, callback: Function) {
+//    const allowedOrigins = process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
+//    
+//    // Permitir requests sin origin (ej: Postman, aplicaciones móviles)
+//    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+//      callback(null, true);
+//    } else {
+//      callback(new Error('No permitido por CORS'));
+//    }
+//  },
+//  credentials: true,
+//  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+//  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+//  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit'],
+//};
+
+//app.use(cors(corsOptions));
+app.use(cors({
+  origin: 'http://localhost:3000',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit'],
-};
-
-app.use(cors(corsOptions));
-
+}));
 // Compresión de respuestas
 app.use(compression());
 
