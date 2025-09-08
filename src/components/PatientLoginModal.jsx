@@ -49,29 +49,33 @@ const PatientLoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/patient/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
+      // Simulación de login - En producción esto se conectaría a un backend real
+      // Por ahora, aceptamos cualquier combinación válida para demo
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simular delay de red
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
-      }
+      // Datos de demo
+      const demoToken = 'demo-token-' + Date.now();
+      const demoVisit = {
+        id: 'DEMO-001',
+        patientName: 'Paciente Demo',
+        date: new Date().toISOString(),
+        status: 'Completado'
+      };
 
       // Guardar token en localStorage
-      localStorage.setItem('patientToken', data.token);
+      localStorage.setItem('patientToken', demoToken);
       
       // Llamar callback de éxito con los datos de la visita
-      onLoginSuccess(data.token, data.visit);
+      if (onLoginSuccess) {
+        onLoginSuccess(demoToken, demoVisit);
+      }
+      
+      // Cerrar el modal
+      handleClose();
       
     } catch (err) {
       console.error('Error de login:', err);
-      setError(err.message || 'Error al verificar los datos. Por favor intente nuevamente.');
+      setError('Sistema en modo demo. Por favor contacte al laboratorio para acceso real.');
     } finally {
       setLoading(false);
     }

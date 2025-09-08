@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 
 // ==================== COMPONENTE DE LOGIN ====================
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const EmployeeLogin = ({ onLoginSuccess }) => {
   const [credentials, setCredentials] = useState({
     username: '',
@@ -22,7 +24,7 @@ const EmployeeLogin = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)
@@ -156,7 +158,7 @@ const AuxiliaryDashboard = ({ user, token, onLogout }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/patients/register', {
+      const response = await fetch('${API_BASE}/api/patients/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -543,7 +545,7 @@ const MedicDashboard = ({ user, token, onLogout }) => {
         Object.entries(searchParams).filter(([_, v]) => v !== '')
       );
       
-      const response = await fetch(`http://localhost:5000/api/patients/search?${queryParams}`, {
+      const response = await fetch(`${API_BASE}/api/patients/search?${queryParams}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -560,7 +562,7 @@ const MedicDashboard = ({ user, token, onLogout }) => {
 
   const handleViewDetails = async (visitId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/visits/${visitId}`, {
+      const response = await fetch(`${API_BASE}/api/visits/${visitId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -580,7 +582,7 @@ const MedicDashboard = ({ user, token, onLogout }) => {
     formData.append('result', uploadFile);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/visits/${selectedVisit.id}/upload`, {
+      const response = await fetch(`${API_BASE}/api/visits/${selectedVisit.id}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -601,7 +603,7 @@ const MedicDashboard = ({ user, token, onLogout }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/visits/${selectedVisit.id}/results/${resultId}`,
+        `${API_BASE}/api/visits/${selectedVisit.id}/results/${resultId}`,
         {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
@@ -886,3 +888,4 @@ const EmployeePortal = () => {
 };
 
 export default EmployeePortal;
+

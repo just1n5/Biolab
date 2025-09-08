@@ -34,9 +34,9 @@ const ContactSection = () => {
     {
       icon: MapPin,
       title: 'Dirección',
-      value: 'Carrera 8 #11-45, San Mateo\nSoacha, Cundinamarca',
+      value: 'Cra. 45a #95-70\nBogotá D.C., Colombia',
       color: 'text-red-500',
-      link: 'https://maps.app.goo.gl/6P14TSPyoivXogh29'
+      link: 'https://www.google.com/maps/search/Cra.+45a+%2395-70,+Bogot%C3%A1,+Colombia'
     },
     {
       icon: Clock,
@@ -302,26 +302,26 @@ const ContactSection = () => {
               </div>
             </div>
 
-            {/* Mapa - Ubicación real de BIOLAB en Soacha */}
+            {/* Mapa - Ubicación real de BIOLAB en Bogotá */}
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
               <div className="h-80 relative">
-                {/* Iframe del mapa con la ubicación correcta en Soacha */}
+                {/* Iframe del mapa con la ubicación real en Cra. 45a #95-70, Bogotá */}
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3977.1456!2d-74.2217!3d4.5731!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3f98b7c7b7c7b7%3A0x1234567890abcdef!2sCarrera%208%20%2311-45%2C%20Soacha%2C%20Cundinamarca!5e0!3m2!1ses!2sco!4v1234567890"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3976.5087!2d-74.0527!3d4.6811!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sCra.%2045a%20%2395-70%2C%20La%20Castellana%2C%20Bogot%C3%A1!5e0!3m2!1ses!2sco!4v1234567890"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
                   allowFullScreen=""
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Ubicación BIOLAB - Soacha"
+                  title="Ubicación BIOLAB - Bogotá"
                   className="absolute inset-0"
                 />
                 
                 {/* Overlay con botón para abrir en Google Maps */}
                 <div className="absolute bottom-4 left-4 right-4">
                   <motion.a
-                    href="https://maps.app.goo.gl/6P14TSPyoivXogh29"
+                    href="https://www.google.com/maps/search/Cra.+45a+%2395-70,+Bogot%C3%A1,+Colombia"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.02 }}
@@ -336,53 +336,7 @@ const ContactSection = () => {
               </div>
             </div>
 
-            {/* Redes sociales */}
-            <div className="bg-gradient-to-r from-biolab-turquoise/10 to-biolab-blue/10 rounded-3xl p-6">
-              <h4 className="font-semibold text-biolab-gray-dark mb-4">
-                Síguenos en nuestras redes
-              </h4>
-              <div className="flex space-x-4">
-                {/* Facebook */}
-                <motion.a
-                  href="https://facebook.com/biolabsas"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 group"
-                  aria-label="Facebook"
-                >
-                  <svg 
-                    className="w-5 h-5 text-biolab-turquoise group-hover:text-biolab-blue transition-colors duration-200"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </motion.a>
-                
-                {/* Instagram */}
-                <motion.a
-                  href="https://instagram.com/biolabsas"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 group"
-                  aria-label="Instagram"
-                >
-                  <svg 
-                    className="w-6 h-6 text-biolab-turquoise group-hover:text-pink-500 transition-colors duration-200"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
-                  </svg>
-                </motion.a>
-              </div>
-            </div>
+
           </motion.div>
         </div>
       </div>

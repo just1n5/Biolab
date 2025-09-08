@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion'
 import { 
   Phone, Mail, MapPin, Clock, 
-  Facebook, Linkedin, Instagram, Youtube,
-  ArrowRight, Heart, Shield, FileText,
+  Heart, Shield, FileText,
   Award, ChevronRight
 } from 'lucide-react'
 
@@ -40,46 +39,8 @@ const Footer = () => {
     ]
   }
 
-  const socialLinks = [
-    { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Instagram, href: '#', label: 'Instagram' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Youtube, href: '#', label: 'YouTube' }
-  ]
-
   return (
     <footer className="bg-biolab-gray-dark text-white">
-      {/* Newsletter Section */}
-      <div className="bg-gradient-to-r from-biolab-turquoise to-biolab-blue">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-4 md:mb-0">
-              <h3 className="text-xl font-poppins font-bold mb-2">
-                Suscríbete a nuestro boletín
-              </h3>
-              <p className="text-white/90">
-                Recibe consejos de salud y novedades de nuestros servicios
-              </p>
-            </div>
-            <div className="flex w-full md:w-auto">
-              <input
-                type="email"
-                placeholder="Tu correo electrónico"
-                className="px-4 py-3 rounded-l-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/70 border border-white/30 focus:outline-none focus:bg-white/30 transition-all duration-200 w-full md:w-64"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-white text-biolab-turquoise rounded-r-lg font-semibold hover:bg-gray-100 transition-colors duration-200 flex items-center"
-              >
-                Suscribir
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
@@ -199,7 +160,7 @@ const Footer = () => {
                 <MapPin className="w-4 h-4 text-biolab-turquoise mr-2 flex-shrink-0 mt-1" />
                 <div className="text-sm">
                   <p className="text-gray-400">Dirección</p>
-                  <p className="text-white">Calle 123 #45-67<br />Bogotá, Colombia</p>
+                  <p className="text-white">Cra. 45a #95-70<br />Bogotá D.C., Colombia</p>
                 </div>
               </li>
               <li className="flex items-start">
@@ -213,36 +174,18 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Social Links */}
+        {/* Legal Links */}
         <div className="mt-8 pt-8 border-t border-gray-700">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex space-x-4 mb-4 md:mb-0">
-              {socialLinks.map((social, index) => (
-                <motion.a
-                  key={index}
-                  href={social.href}
-                  aria-label={social.label}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-biolab-turquoise transition-colors duration-200"
-                >
-                  <social.icon className="w-5 h-5 text-white" />
-                </motion.a>
-              ))}
-            </div>
-
-            {/* Legal Links */}
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              {footerLinks.legal.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.href}
-                  className="text-gray-400 hover:text-biolab-turquoise transition-colors duration-200"
-                >
-                  {link.name}
-                </a>
-              ))}
-            </div>
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            {footerLinks.legal.map((link, index) => (
+              <a
+                key={index}
+                href={link.href}
+                className="text-gray-400 hover:text-biolab-turquoise transition-colors duration-200"
+              >
+                {link.name}
+              </a>
+            ))}
           </div>
         </div>
 

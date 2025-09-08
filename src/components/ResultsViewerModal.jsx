@@ -19,25 +19,19 @@ const ResultsViewerModal = ({ isOpen, onClose, token, visitInfo }) => {
     setError('');
     
     try {
-      const response = await fetch(`http://localhost:5000/api/results/${visitInfo.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Simulación de carga de resultados - En producción esto se conectaría a un backend real
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simular delay de red
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al cargar los resultados');
-      }
-
-      // Crear URL del blob para el PDF
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
+      // En modo demo, mostrar un mensaje informativo
+      // En producción, aquí se cargaría el PDF real desde el servidor
+      
+      // Por ahora, no podemos mostrar un PDF real sin backend
+      // Mostrar mensaje de demo
+      setError('Sistema en modo demostración. Los resultados reales estarán disponibles cuando el sistema esté en producción.');
       
     } catch (err) {
       console.error('Error al cargar resultados:', err);
-      setError(err.message || 'No se pudieron cargar los resultados');
+      setError('Sistema en modo demo. Para acceder a resultados reales, contacte al laboratorio.');
     } finally {
       setLoading(false);
     }

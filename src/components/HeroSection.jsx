@@ -147,8 +147,8 @@ const HeroSection = ({ onServicesClick }) => {
               className="pt-6"
             >
               <p className="text-white/80 text-sm">
-                Atención presencial: Lunes a Sábado 6:00 AM - 4:00 PM | 
-                <span className="ml-2">📍 Soacha, Cundinamarca</span>
+                Atención presencial: Lunes a Viernes 6:00 AM - 4:00 PM, Sábado 6:00 AM - 1:00 PM  |
+                <span className="ml-2">📍 Cra. 45a # 95 - 70, Bogotá</span>
               </p>
             </motion.div>
           </motion.div>
