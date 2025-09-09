@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, UserRole } from '@/types';
 import authService from '@/services/auth.service';
+import { tokenManager } from '@/services/api';
 import toast from 'react-hot-toast';
 
 interface AuthState {
@@ -28,25 +29,44 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
+    
+    console.log('Attempting login with:', { email });
+    
     try {
       const response = await authService.login({ email, password });
       
+      console.log('Login response:', response);
+      
       if (response.success && response.data) {
+        // Guardar usuario en localStorage para persistencia
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
         set({
           user: response.data.user,
           isAuthenticated: true,
           isLoading: false,
+          error: null
         });
-        toast.success('Inicio de sesión exitoso');
+        
+        toast.success(`Bienvenido ${response.data.user.fullName}`);
       } else {
         throw new Error(response.message || 'Error al iniciar sesión');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Error al iniciar sesión';
+      
       set({
-        error: error.response?.data?.message || error.message || 'Error al iniciar sesión',
+        error: errorMessage,
         isLoading: false,
+        isAuthenticated: false,
+        user: null
       });
-      toast.error(error.response?.data?.message || 'Error al iniciar sesión');
+      
+      toast.error(errorMessage);
       throw error;
     }
   },
@@ -57,21 +77,28 @@ const useAuthStore = create<AuthState>((set, get) => ({
       const response = await authService.register(data);
       
       if (response.success && response.data) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
         set({
           user: response.data.user,
           isAuthenticated: true,
           isLoading: false,
+          error: null
         });
         toast.success('Registro exitoso');
       } else {
         throw new Error(response.message || 'Error al registrar');
       }
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Error al registrar';
+      
       set({
-        error: error.response?.data?.message || error.message || 'Error al registrar',
+        error: errorMessage,
         isLoading: false,
       });
-      toast.error(error.response?.data?.message || 'Error al registrar');
+      toast.error(errorMessage);
       throw error;
     }
   },
@@ -80,33 +107,58 @@ const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       await authService.logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      tokenManager.clearTokens();
+      localStorage.removeItem('user');
       set({
         user: null,
         isAuthenticated: false,
         isLoading: false,
+        error: null
       });
       toast.success('Sesión cerrada exitosamente');
-    } catch (error) {
-      set({ isLoading: false });
-      toast.error('Error al cerrar sesión');
     }
   },
 
   checkAuth: async () => {
+    // Primero verificar si hay un token
     if (!authService.isAuthenticated()) {
-      set({ user: null, isAuthenticated: false });
+      set({ user: null, isAuthenticated: false, isLoading: false });
       return;
     }
 
+    // Intentar recuperar usuario del localStorage primero
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        set({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+        localStorage.removeItem('user');
+      }
+    }
+
+    // Luego verificar con el servidor
     set({ isLoading: true });
     try {
       const user = await authService.getCurrentUser();
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         isAuthenticated: true,
         isLoading: false,
       });
     } catch (error) {
+      console.error('Error checking auth:', error);
+      tokenManager.clearTokens();
+      localStorage.removeItem('user');
       set({
         user: null,
         isAuthenticated: false,
@@ -119,6 +171,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const updatedUser = await authService.updateProfile(data);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       set({
         user: updatedUser,
         isLoading: false,

@@ -28,10 +28,10 @@ export interface IUser extends Document {
   profilePhoto?: string;
   phone?: string;
   documentNumber?: string;
-  specialty?: string; // Para médicos especialistas
-  digitalSignatureUrl?: string; // Para médicos (firma digital)
-  professionalCard?: string; // Tarjeta profesional para médicos
-  permissions?: string[]; // Permisos específicos adicionales
+  specialty?: string;
+  digitalSignatureUrl?: string;
+  professionalCard?: string;
+  permissions?: string[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -76,8 +76,7 @@ const UserSchema = new Schema<IUser>(
     companyId: {
       type: Schema.Types.ObjectId,
       ref: 'Company',
-      sparse: true, // Permite valores null para índice único
-      // Requerido solo para usuarios de empresa
+      sparse: true,
       required: function(this: IUser) {
         return this.role === UserRole.EMPRESA_RRHH;
       },
@@ -123,7 +122,6 @@ const UserSchema = new Schema<IUser>(
     specialty: {
       type: String,
       enum: ['Medicina General', 'Optometria', 'Fonoaudiologia', 'Psicologia', 'Medicina Ocupacional'],
-      // Requerido solo para médicos
       required: function(this: IUser) {
         return this.role === UserRole.MEDICO;
       },
@@ -154,13 +152,25 @@ UserSchema.index({ createdAt: -1 });
 
 // Middleware para hashear contraseña antes de guardar
 UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  // Solo hashear si la contraseña ha sido modificada
+  if (!this.isModified('password')) {
+    return next();
+  }
 
   try {
+    // Log para debugging
+    console.log('Hashing password for user:', this.email);
+    
+    // Generar salt y hashear contraseña
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    const hashedPassword = await bcrypt.hash(this.password, salt);
+    
+    console.log('Password hashed successfully');
+    this.password = hashedPassword;
+    
     next();
   } catch (error: any) {
+    console.error('Error hashing password:', error);
     next(error);
   }
 });
@@ -168,8 +178,22 @@ UserSchema.pre('save', async function(next) {
 // Método para comparar contraseñas
 UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   try {
-    return await bcrypt.compare(candidatePassword, this.password);
+    // Log para debugging
+    console.log('Comparing passwords for user:', this.email);
+    console.log('Candidate password length:', candidatePassword?.length);
+    console.log('Stored password hash exists:', !!this.password);
+    
+    if (!this.password) {
+      console.error('No password stored for user');
+      return false;
+    }
+    
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password comparison result:', isMatch);
+    
+    return isMatch;
   } catch (error) {
+    console.error('Error comparing passwords:', error);
     return false;
   }
 };

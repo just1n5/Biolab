@@ -11,10 +11,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
     
+    logInfo(`Intento de login para: ${email}`);
+    console.log('Login attempt:', { email, passwordLength: password?.length });
+    
     // Buscar usuario con contraseña
     const user = await User.findOne({ email }).select('+password +refreshToken');
     
     if (!user) {
+      logInfo(`Usuario no encontrado: ${email}`);
+      console.log('User not found:', email);
+      
       // Log de intento fallido
       await AuditLog.createLog({
         actorId: null as any,
@@ -36,10 +42,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
+    console.log('User found:', { 
+      email: user.email, 
+      hasPassword: !!user.password,
+      isActive: user.isActive 
+    });
+    
     // Verificar contraseña
     const isPasswordValid = await user.comparePassword(password);
+    console.log('Password validation result:', isPasswordValid);
     
     if (!isPasswordValid) {
+      logInfo(`Contraseña incorrecta para: ${email}`);
+      
       // Log de intento fallido
       await AuditLog.createLog({
         actorId: user._id as any,
@@ -64,6 +79,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     
     // Verificar si el usuario está activo
     if (!user.isActive) {
+      logInfo(`Usuario inactivo intentó iniciar sesión: ${email}`);
       res.status(403).json({
         success: false,
         message: 'Tu cuenta está desactivada. Contacta al administrador.',
@@ -100,6 +116,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
     
     logInfo(`Usuario ${user.email} inició sesión exitosamente`);
+    console.log('Login successful for:', user.email);
     
     // Remover datos sensibles antes de enviar
     const userObject = user.toObject();
@@ -117,9 +134,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     logError('Error en login', error);
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Error al iniciar sesión',
+      error: process.env.NODE_ENV === 'development' ? error : undefined
     });
   }
 };
@@ -128,6 +147,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, fullName, role, companyId, documentNumber, phone, specialty } = req.body;
+    
+    logInfo(`Intento de registro para: ${email}`);
     
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
@@ -160,7 +181,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Crear nuevo usuario
     const newUser = new User({
       email,
-      password,
+      password, // Se hasheará automáticamente en el pre-save hook
       fullName,
       role,
       companyId,
@@ -219,9 +240,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     logError('Error en registro', error);
+    console.error('Register error:', error);
     res.status(500).json({
       success: false,
       message: 'Error al registrar usuario',
+      error: process.env.NODE_ENV === 'development' ? error : undefined
     });
   }
 };
@@ -267,6 +290,14 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 export const refreshToken = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      res.status(400).json({
+        success: false,
+        message: 'Refresh token requerido',
+      });
+      return;
+    }
     
     // Verificar refresh token
     const decoded = verifyRefreshToken(refreshToken);

@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
 import User, { UserRole } from '../models/User';
 import Company from '../models/Company';
 import Profesiogram, { defaultProfesiograms } from '../models/Profesiogram';
@@ -18,6 +17,7 @@ const seedData = async () => {
     await connectDB();
     
     logInfo('🌱 Iniciando seed de la base de datos...');
+    console.log('\n🌱 INICIANDO SEED DE LA BASE DE DATOS...\n');
     
     // Limpiar colecciones existentes (solo en desarrollo)
     if (process.env.NODE_ENV === 'development') {
@@ -26,15 +26,17 @@ const seedData = async () => {
       await Profesiogram.deleteMany({});
       await Patient.deleteMany({});
       logInfo('📦 Colecciones limpiadas');
+      console.log('📦 Colecciones limpiadas');
     }
     
-    // Crear usuario administrador
-    const adminPassword = process.env.ADMIN_PASSWORD || 'BiolabAdmin2025!';
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    // Contraseña por defecto para todos los usuarios de prueba
+    const defaultPassword = process.env.ADMIN_PASSWORD || 'BiolabAdmin2025!';
+    console.log(`\n🔑 Usando contraseña por defecto: ${defaultPassword}\n`);
     
+    // Crear usuario administrador
     const adminUser = await User.create({
       email: process.env.ADMIN_EMAIL || 'admin@biolabsas.com',
-      password: hashedPassword,
+      password: defaultPassword, // Se hasheará automáticamente
       fullName: 'Administrador BIOLAB',
       role: UserRole.ADMIN,
       isActive: true,
@@ -42,6 +44,7 @@ const seedData = async () => {
     });
     
     logInfo('👤 Usuario administrador creado');
+    console.log(`✅ Usuario Admin creado: ${adminUser.email}`);
     
     // Crear empresas de ejemplo
     const companies = await Company.create([
@@ -96,48 +99,50 @@ const seedData = async () => {
     ]);
     
     logInfo(`🏢 ${companies.length} empresas creadas`);
+    console.log(`✅ ${companies.length} empresas creadas`);
     
     // Crear usuarios de empresa (RRHH)
-    const companyUsers = await User.create([
-      {
-        email: 'maria.rodriguez@constructoraabc.com',
-        password: hashedPassword,
-        fullName: 'María Rodríguez',
-        role: UserRole.EMPRESA_RRHH,
-        companyId: companies[0]._id,
-        isActive: true,
-      },
-      {
-        email: 'carlos.gomez@transportesxyz.com',
-        password: hashedPassword,
-        fullName: 'Carlos Gómez',
-        role: UserRole.EMPRESA_RRHH,
-        companyId: companies[1]._id,
-        isActive: true,
-      },
-    ]);
+    const companyUser1 = await User.create({
+      email: 'maria.rodriguez@constructoraabc.com',
+      password: defaultPassword, // Se hasheará automáticamente
+      fullName: 'María Rodríguez',
+      role: UserRole.EMPRESA_RRHH,
+      companyId: companies[0]._id,
+      isActive: true,
+    });
+    console.log(`✅ Usuario RRHH creado: ${companyUser1.email}`);
     
-    logInfo(`👥 ${companyUsers.length} usuarios de empresa creados`);
+    const companyUser2 = await User.create({
+      email: 'carlos.gomez@transportesxyz.com',
+      password: defaultPassword, // Se hasheará automáticamente
+      fullName: 'Carlos Gómez',
+      role: UserRole.EMPRESA_RRHH,
+      companyId: companies[1]._id,
+      isActive: true,
+    });
+    console.log(`✅ Usuario RRHH creado: ${companyUser2.email}`);
+    
+    logInfo('👥 Usuarios de empresa creados');
     
     // Crear usuarios internos
     const internalUsers = await User.create([
       {
         email: 'gerencia@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Director General',
         role: UserRole.GERENCIA,
         isActive: true,
       },
       {
         email: 'recepcion@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Ana López',
         role: UserRole.RECEPCION,
         isActive: true,
       },
       {
         email: 'medico.general@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Dr. Juan Pérez',
         role: UserRole.MEDICO,
         specialty: 'Medicina General',
@@ -146,7 +151,7 @@ const seedData = async () => {
       },
       {
         email: 'optometra@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Dra. Laura García',
         role: UserRole.MEDICO,
         specialty: 'Optometria',
@@ -155,7 +160,7 @@ const seedData = async () => {
       },
       {
         email: 'fonoaudiologo@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Dr. Roberto Silva',
         role: UserRole.MEDICO,
         specialty: 'Fonoaudiologia',
@@ -164,14 +169,14 @@ const seedData = async () => {
       },
       {
         email: 'laboratorio@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Bacterióloga Sandra Ruiz',
         role: UserRole.LABORATORIO,
         isActive: true,
       },
       {
         email: 'facturacion@biolabsas.com',
-        password: hashedPassword,
+        password: defaultPassword,
         fullName: 'Pedro Jiménez',
         role: UserRole.FACTURACION,
         isActive: true,
@@ -179,6 +184,7 @@ const seedData = async () => {
     ]);
     
     logInfo(`👨‍⚕️ ${internalUsers.length} usuarios internos creados`);
+    console.log(`✅ ${internalUsers.length} usuarios internos creados`);
     
     // Crear profesiogramas predeterminados
     const profesiograms = await Profesiogram.create(
@@ -191,6 +197,7 @@ const seedData = async () => {
     );
     
     logInfo(`📋 ${profesiograms.length} profesiogramas creados`);
+    console.log(`✅ ${profesiograms.length} profesiogramas creados`);
     
     // Asignar profesiogramas a empresas
     for (const company of companies) {
@@ -251,47 +258,61 @@ const seedData = async () => {
     ]);
     
     logInfo(`🙍 ${patients.length} pacientes creados`);
+    console.log(`✅ ${patients.length} pacientes creados`);
     
     // Crear usuario paciente
     const patientUser = await User.create({
       email: 'juan.martinez@example.com',
-      password: hashedPassword,
+      password: defaultPassword,
       fullName: 'Juan Martínez',
       role: UserRole.PACIENTE,
       documentNumber: '1234567890',
       isActive: true,
     });
+    console.log(`✅ Usuario Paciente creado: ${patientUser.email}`);
     
     logInfo('✅ Seed completado exitosamente');
     
     // Mostrar información de acceso
-    console.log('\n=================================');
+    console.log('\n');
+    console.log('=================================');
     console.log('📋 CREDENCIALES DE ACCESO');
     console.log('=================================');
     console.log('\n🔐 Usuario Administrador:');
     console.log(`   Email: ${process.env.ADMIN_EMAIL || 'admin@biolabsas.com'}`);
-    console.log(`   Contraseña: ${adminPassword}`);
+    console.log(`   Contraseña: ${defaultPassword}`);
     console.log('\n👥 Usuarios de Empresa (RRHH):');
     console.log('   Email: maria.rodriguez@constructoraabc.com');
     console.log('   Email: carlos.gomez@transportesxyz.com');
-    console.log(`   Contraseña: ${adminPassword}`);
+    console.log(`   Contraseña: ${defaultPassword}`);
     console.log('\n👨‍⚕️ Usuario Médico:');
     console.log('   Email: medico.general@biolabsas.com');
-    console.log(`   Contraseña: ${adminPassword}`);
+    console.log(`   Contraseña: ${defaultPassword}`);
     console.log('\n🧑 Usuario Paciente:');
     console.log('   Email: juan.martinez@example.com');
-    console.log(`   Contraseña: ${adminPassword}`);
+    console.log(`   Contraseña: ${defaultPassword}`);
     console.log('\n=================================\n');
+    
+    // Verificación de usuarios creados
+    console.log('📝 Verificando usuarios creados...');
+    const allUsers = await User.find({}).select('email role isActive');
+    console.log(`Total de usuarios en la base de datos: ${allUsers.length}`);
+    allUsers.forEach(user => {
+      console.log(`   - ${user.email} (${user.role}) - Activo: ${user.isActive}`);
+    });
     
   } catch (error) {
     logError('Error en seed:', error);
+    console.error('❌ Error en seed:', error);
     process.exit(1);
   } finally {
     await mongoose.connection.close();
     logInfo('📴 Conexión a base de datos cerrada');
+    console.log('📴 Conexión a base de datos cerrada');
     process.exit(0);
   }
 };
 
 // Ejecutar seed
+console.log('Iniciando proceso de seed...');
 seedData();

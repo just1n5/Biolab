@@ -1,14 +1,24 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
 
+// Determinar la URL base según el entorno
+const getBaseURL = () => {
+  // En desarrollo, usar rutas relativas para que funcione el proxy de Vite
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  // En producción, usar la URL completa
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
+
 // Crear instancia de axios
 const api: AxiosInstance = axios.create({
-  // Use relative '/api' in dev so Vite proxy handles it. Override with VITE_API_URL in prod.
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getBaseURL(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Importante para CORS
 });
 
 // Token management
@@ -22,6 +32,7 @@ export const tokenManager = {
   clearTokens: () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   },
 };
 
@@ -32,9 +43,19 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log para debugging
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      baseURL: config.baseURL,
+      data: config.data
+    });
+    
     return config;
   },
   (error: AxiosError) => {
+    console.error('Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -58,14 +79,28 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log para debugging
+    console.log('API Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   async (error: AxiosError) => {
+    console.error('Response Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 
     // Handle 401 errors (unauthorized)
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login') {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -89,10 +124,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh-token`,
-          { refreshToken }
-        );
+        const response = await api.post('/auth/refresh-token', { refreshToken });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         tokenManager.setTokens(accessToken, newRefreshToken);
@@ -114,12 +146,17 @@ api.interceptors.response.use(
       }
     }
 
+    // No redirigir en errores de login
+    if (error.response?.status === 401 && originalRequest.url === '/auth/login') {
+      return Promise.reject(error);
+    }
+
     // Handle other errors
     if (error.response?.status === 403) {
       toast.error('No tienes permisos para realizar esta acción');
     } else if (error.response?.status === 404) {
-      toast.error('Recurso no encontrado');
-    } else if (error.response?.status === 500) {
+      console.error('Recurso no encontrado:', error.config?.url);
+    } else if (error.response?.status >= 500) {
       toast.error('Error del servidor. Por favor intenta más tarde');
     }
 

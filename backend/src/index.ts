@@ -48,29 +48,38 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// CORS configuration
-//const corsOptions = {
-//  origin: function (origin: string | undefined, callback: Function) {
-//    const allowedOrigins = process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
-//    
-//    // Permitir requests sin origin (ej: Postman, aplicaciones móviles)
-//    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-//      callback(null, true);
-//    } else {
-//      callback(new Error('No permitido por CORS'));
-//    }
-//  },
-//  credentials: true,
-//  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-//  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-//  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit'],
-//};
-
-//app.use(cors(corsOptions));
-app.use(cors({
-  origin: 'http://localhost:3000',
+// CORS configuration - MÁS PERMISIVO PARA DESARROLLO
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: Function) {
+    // En desarrollo, permitir cualquier origen
+    if (process.env.NODE_ENV === 'development') {
+      callback(null, true);
+      return;
+    }
+    
+    // En producción, usar lista blanca
+    const allowedOrigins = process.env.FRONTEND_URL?.split(',') || ['http://localhost:5173'];
+    
+    // Permitir requests sin origin (ej: Postman, aplicaciones móviles)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+// Manejar preflight requests
+app.options('*', cors(corsOptions));
+
 // Compresión de respuestas
 app.use(compression());
 
@@ -82,7 +91,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(sanitizeInput);
 
 // Logger de HTTP requests
-app.use(morgan('combined', { stream }));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined', { stream }));
+}
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -91,6 +104,10 @@ const globalLimiter = rateLimit({
   message: 'Demasiadas solicitudes desde esta IP, por favor intenta más tarde.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Saltar rate limiting en desarrollo
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 app.use('/api/', globalLimiter);
@@ -98,7 +115,7 @@ app.use('/api/', globalLimiter);
 // Rate limiting específico para auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // 5 intentos de login
+  max: process.env.NODE_ENV === 'development' ? 100 : 5, // Más permisivo en desarrollo
   message: 'Demasiados intentos de inicio de sesión, por favor intenta más tarde.',
   skipSuccessfulRequests: true,
 });
@@ -141,11 +158,22 @@ app.get('/', (req: Request, res: Response) => {
     message: 'API de BIOLAB Integral',
     version: '1.0.0',
     documentation: '/api/docs',
+    environment: process.env.NODE_ENV,
+  });
+});
+
+// Test endpoint para verificar conexión
+app.get('/api/test', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'API funcionando correctamente',
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Manejo de rutas no encontradas
 app.use('*', (req: Request, res: Response) => {
+  console.log('404 - Ruta no encontrada:', req.originalUrl);
   res.status(404).json({
     success: false,
     message: 'Recurso no encontrado',
@@ -156,6 +184,7 @@ app.use('*', (req: Request, res: Response) => {
 // Middleware de manejo de errores global
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   logError('Error no manejado', err);
+  console.error('Error:', err);
   
   // Error de validación de Mongoose
   if (err.name === 'ValidationError') {
@@ -210,7 +239,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(statusCode).json({
     success: false,
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(process.env.NODE_ENV === 'development' && { 
+      stack: err.stack,
+      error: err 
+    }),
   });
 });
 
@@ -221,6 +253,17 @@ const server = app.listen(PORT, () => {
   logInfo(`🚀 Servidor corriendo en puerto ${PORT}`);
   logInfo(`📝 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   logInfo(`🔗 URL: http://localhost:${PORT}`);
+  console.log(`
+╔═══════════════════════════════════════════╗
+║                                           ║
+║   🚀 BIOLAB Backend Server                ║
+║                                           ║
+║   Puerto: ${PORT}                            ║
+║   Ambiente: ${process.env.NODE_ENV || 'development'}              ║
+║   URL: http://localhost:${PORT}              ║
+║                                           ║
+╚═══════════════════════════════════════════╝
+  `);
 });
 
 // Manejo de señales para cierre graceful
@@ -243,11 +286,13 @@ process.on('SIGINT', () => {
 // Manejo de errores no capturados
 process.on('uncaughtException', (err) => {
   logError('Error no capturado:', err);
+  console.error('Error no capturado:', err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   logError('Promesa rechazada no manejada:', reason);
+  console.error('Promesa rechazada no manejada:', reason);
   process.exit(1);
 });
 
